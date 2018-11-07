@@ -18,9 +18,11 @@ void nearest_neighbors_distance_initializer(po::options_description& nearest_nei
     nearest_neighbors_distance_desc.add_options()("structure,s", po::value<fs::path>()->required(),
                                "POS.vasp like file that you want to get the nearest neighbors for.");
     
-    nearest_neighbors_distance_desc.add_options()("radius,r", po::value<double>()->required(),
+    nearest_neighbors_distance_desc.add_options()("max_radius", po::value<double>()->required(),
                                "Maximum radius to look for neighbors in");
 
+    nearest_neighbors_distance_desc.add_options()("min_radius", po::value<double>()->default_value(0),
+                               "minimum radius to look for neighbors in");
     return;
 }
 } // namespace Utilities
@@ -52,8 +54,8 @@ int main(int argc, char* argv[])
     auto path = nearest_neighbors_distance_launch.fetch<fs::path>("structure");
 
     auto struc = Rewrap::Structure(path);
-    auto max_radius= nearest_neighbors_distance_launch.fetch<double>("radius");
-
+    auto max_radius= nearest_neighbors_distance_launch.fetch<double>("max_radius");
+    auto min_radius=  nearest_neighbors_distance_launch.fetch<double>("min_radius");
 //    if (nearest_neighbors_distance_launch.vm().count("output"))
 //    {
 //        auto out_path = nearest_neighbors_distance_launch.fetch<fs::path>("output");
@@ -64,7 +66,7 @@ int main(int argc, char* argv[])
 //    {
 //    }
 
-    auto neighbor_analysis=find_nearest_neighbors(struc,max_radius);
+    auto neighbor_analysis=find_nearest_neighbors(struc,min_radius,max_radius);
     // access site i's neighbor by doing neighbor_analysis[i]
        for (int i =0 ; i < struc.basis.size() ; i++){
 //             if struc.basis[i].occ_name()== "Sn"

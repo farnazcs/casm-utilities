@@ -8,6 +8,6 @@
 #include <iostream>
 
 
-std::vector<std::vector<std::pair<CASM::Site,double>>> find_nearest_neighbors( const Rewrap::Structure &struc, double max_radius);
+std::vector<std::vector<std::pair<CASM::Site,double>>> find_nearest_neighbors( const Rewrap::Structure &struc, double min_radius, double max_radius);
 
 #endif

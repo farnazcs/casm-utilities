@@ -1,9 +1,12 @@
 #include "casmutils/stage.hpp"
 
-std::vector<std::vector<std::pair<CASM::Site,double>>> find_nearest_neighbors( const Rewrap::Structure &struc, double max_radius){
+    typedef std::pair<CASM::Site,double> NeighborInfo;
+    typedef std::vector<NeighborInfo> SiteNeighborInfo;
+
+std::vector<SiteNeighborInfo> find_nearest_neighbors( const Rewrap::Structure &struc, double min_radius, double max_radius){
 // need lattice for temporary point
     auto lattice = struc.lattice();
-    std::vector<std::vector<std::pair<CASM::Site,double>>> neighbor_analysis;
+    std::vector<SiteNeighborInfo> neighbor_analysis;
     // The periodic shifts of the unit cell will be stored here
     CASM::Coordinate shift_value(lattice);
 
@@ -16,7 +19,7 @@ std::vector<std::vector<std::pair<CASM::Site,double>>> find_nearest_neighbors( c
                CASM::Site tatom(struc.basis[i]);
          //get distance to closest basis site in the unit cell at the origin
    // this is a container holding the sites within max radius of site i
-  std::vector<std::pair<CASM::Site,double>> neighbors_and_dists;
+  SiteNeighborInfo neighbors_and_dists;
         //loop over all other sites to find the distance
          for(int j = 0; j < struc.basis.size(); j++) {
    // This gives all the periodic images of the unit cell
@@ -30,11 +33,20 @@ std::vector<std::vector<std::pair<CASM::Site,double>>> find_nearest_neighbors( c
             CASM::Site tatomj(struc.basis[j] + shift_value);
             // this is the distance from site i to the shifted site j
           double dist = tatom.dist(tatomj);
-           if(dist <= max_radius){
-              neighbors_and_dists.push_back(std::make_pair(tatomj,dist));
+           if ((dist <= max_radius) && (dist >=min_radius) ) {
+              NeighborInfo info = std::make_pair(tatomj,dist);
+              neighbors_and_dists.push_back(info);
            }
           } while (++grid_count);
        }
+	 //sort before push back
+	auto mycomparefunction = [](const NeighborInfo& lhs, const NeighborInfo& rhs)->bool{
+		if (lhs.second == rhs.second){
+			return lhs.first.occ_name() < rhs.first.occ_name();
+		}
+		return lhs.second < rhs.second;
+	};
+	 std::sort (neighbors_and_dists.begin(),neighbors_and_dists.end(),mycomparefunction);
         neighbor_analysis.push_back(neighbors_and_dists);
                }
         return neighbor_analysis;
